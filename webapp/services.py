@@ -1,4 +1,5 @@
 import re
+import closest_pairs
 from scipy import spatial
 from http import HTTPStatus
 from flask import Flask, jsonify, request
@@ -9,6 +10,7 @@ robot_re = re.compile(r"^robot#([1-9][0-9]*)")
 robot_pos = {}
 sorted_robot_ids = None
 tree = None
+nearest_dist = None
 
 @app.route("/distance", methods=['POST'])
 def find_distance():
@@ -60,12 +62,13 @@ def update_robot_position(robot_id):
         return '', HTTPStatus.BAD_REQUEST
 
 def _update_robot_pos(robot_id, pos):
-    global tree, sorted_robot_ids
+    global tree, sorted_robot_ids, nearest_dist
 
     robot_pos[robot_id] = pos
     sorted_robot_ids = sorted(robot_pos.keys())
     data = [(x[1]['x'], x[1]['y']) for x in sorted(robot_pos.items())]
     tree = spatial.KDTree(data)
+    nearest_dist = min(tree.query(data, k=2)[0][:, 1])
 
 @app.route("/robot/<robot_id>/position", methods=['GET'])
 def get_robot_position(robot_id):
@@ -93,3 +96,9 @@ def find_nearest_robot():
         return jsonify(robot_ids=nearest_robot), HTTPStatus.OK
     except:
         return '', HTTPStatus.BAD_REQUEST
+
+@app.route("/closestpair", methods=['GET'])
+def find_closest_robot():
+    if not nearest_dist or nearest_dist == float('inf'):
+        return '', 424
+    return jsonify(distance=nearest_dist), HTTPStatus.OK
