@@ -26,6 +26,28 @@ def find_distance():
                 first_pos = robot_pos[robot_id1]
             else:
                 return '', 424
+        elif len(first_pos) != 2:
+            return '', HTTPStatus.BAD_REQUEST
+        elif 'x' not in first_pos or 'y' not in first_pos:
+            x = None
+            if 'east' in first_pos:
+                x = first_pos['east']
+            elif 'west' in first_pos:
+                x = -first_pos['west']
+            if x is None:
+                return '', HTTPStatus.BAD_REQUEST
+            y = None
+            if 'north' in first_pos:
+                y = first_pos['north']
+            elif 'south' in first_pos:
+                y = -first_pos['south']
+            if y is None:
+                return '', HTTPStatus.BAD_REQUEST
+            first_pos = {
+                'x': x,
+                'y': y
+            }
+            
 
         if type(second_pos) == str and robot_re.fullmatch(second_pos):
             robot_id2 = int(second_pos[6:])
@@ -33,6 +55,27 @@ def find_distance():
                 second_pos = robot_pos[robot_id2]
             else:
                 return '', 424
+        elif len(second_pos) != 2:
+            return '', HTTPStatus.BAD_REQUEST
+        elif 'x' not in second_pos or 'y' not in second_pos:
+            x = None
+            if 'east' in second_pos:
+                x = second_pos['east']
+            elif 'west' in second_pos:
+                x = -second_pos['west']
+            if x is None:
+                return '', HTTPStatus.BAD_REQUEST
+            y = None
+            if 'north' in second_pos:
+                y = second_pos['north']
+            elif 'south' in second_pos:
+                y = -second_pos['south']
+            if y is None:
+                return '', HTTPStatus.BAD_REQUEST
+            second_pos = {
+                'x': x,
+                'y': y
+            }
 
         metric = body['metric'] if 'metric' in body else 'euclidean'
         if metric == 'euclidean':
@@ -56,7 +99,30 @@ def update_robot_position(robot_id):
         robot_id = int(robot_id)
 
         body = request.get_json()
-        _update_robot_pos(robot_id, body['position'])
+        pos = body['position']
+        if len(pos) != 2:
+            return '', HTTPStatus.BAD_REQUEST
+        elif 'x' not in pos or 'y' not in pos:
+            x = None
+            if 'east' in pos:
+                x = pos['east']
+            elif 'west' in pos:
+                x = -pos['west']
+            if x is None:
+                return '', HTTPStatus.BAD_REQUEST
+            y = None
+            if 'north' in pos:
+                y = pos['north']
+            elif 'south' in pos:
+                y = -pos['south']
+            if y is None:
+                return '', HTTPStatus.BAD_REQUEST
+            pos = {
+                'x': x,
+                'y': y
+            }
+
+        _update_robot_pos(robot_id, pos)
         return '', HTTPStatus.NO_CONTENT
     except:
         return '', HTTPStatus.BAD_REQUEST
@@ -100,6 +166,14 @@ def find_nearest_robot():
         return jsonify(robot_ids=nearest_robot), HTTPStatus.OK
     except:
         return '', HTTPStatus.BAD_REQUEST
+
+@app.route("/alien/<object_dna>/report", methods=['POST'])
+def report_object():
+    pass
+
+@app.route("/alien/{object_dna}/position", methods=['GET'])
+def find_object_position():
+    pass
 
 @app.route("/closestpair", methods=['GET'])
 def find_closest_robot():
