@@ -9,8 +9,9 @@ robot_pos = {}
 
 @app.route("/distance", methods=['POST'])
 def find_distance():
-    body = request.get_json()
     try:
+        body = request.get_json()
+    
         first_pos = body['first_pos']
         second_pos = body['second_pos']
 
@@ -38,31 +39,40 @@ def _get_manhattan_distance(p1, p2):
 
 @app.route("/robot/<robot_id>/position", methods=['PUT'])
 def update_robot_position(robot_id):
-    robot_id = int(robot_id)
+    try:
+        robot_id = int(robot_id)
 
-    body = request.get_json()
-    robot_pos[robot_id] = body['position']
-    return '', HTTPStatus.NO_CONTENT
+        body = request.get_json()
+        robot_pos[robot_id] = body['position']
+        return '', HTTPStatus.NO_CONTENT
+    except:
+        return '', HTTPStatus.BAD_REQUEST
 
 @app.route("/robot/<robot_id>/position", methods=['GET'])
 def get_robot_position(robot_id):
-    robot_id = int(robot_id)
+    try:
+        robot_id = int(robot_id)
 
-    if robot_id in robot_pos:
-        return jsonify(position=robot_pos[robot_id]), HTTPStatus.OK
-    else:
+        if robot_id in robot_pos:
+            return jsonify(position=robot_pos[robot_id]), HTTPStatus.OK
+        else:
+            return '', HTTPStatus.NOT_FOUND
+    except:
         return '', HTTPStatus.NOT_FOUND
 
 @app.route("/nearest", methods=['POST'])
 def find_nearest_robot():
-    body = request.get_json()
+    try:
+        body = request.get_json()
 
-    ref_position = body['ref_position']
-    nearest_robot = []
-    min_dist = float('inf')
-    for robot_id in robot_pos:
-        dist = _get_euclidean_distance(robot_pos[robot_id], ref_position)
-        if dist < min_dist:
-            min_dist = dist
-            nearest_robot = [robot_id]
-    return jsonify(robot_ids=nearest_robot), HTTPStatus.OK
+        ref_position = body['ref_position']
+        nearest_robot = []
+        min_dist = float('inf')
+        for robot_id in robot_pos:
+            dist = _get_euclidean_distance(robot_pos[robot_id], ref_position)
+            if dist < min_dist:
+                min_dist = dist
+                nearest_robot = [robot_id]
+        return jsonify(robot_ids=nearest_robot), HTTPStatus.OK
+    except:
+        return '', HTTPStatus.BAD_REQUEST
