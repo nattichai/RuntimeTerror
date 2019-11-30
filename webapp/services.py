@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 robot_re = re.compile(r"^robot#([1-9][0-9]*)")
 robot_pos = {}
+sorted_robot_pos = []
 
 @app.route("/distance", methods=['POST'])
 def find_distance():
@@ -43,10 +44,22 @@ def update_robot_position(robot_id):
         robot_id = int(robot_id)
 
         body = request.get_json()
-        robot_pos[robot_id] = body['position']
+        _update_sorted_robot_pos(robot_id, body['position'])
         return '', HTTPStatus.NO_CONTENT
     except:
         return '', HTTPStatus.BAD_REQUEST
+
+def _update_sorted_robot_pos(robot_id, pos):
+    global sorted_robot_pos
+
+    if robot_id in robot_pos:
+        old_pos = robot_pos[robot_id]
+        sorted_robot_pos.remove((old_pos['x'], old_pos['y']))
+
+    robot_pos[robot_id] = pos
+
+    sorted_robot_pos.append((pos['x'], pos['y']))
+    sorted_robot_pos = sorted(sorted_robot_pos)
 
 @app.route("/robot/<robot_id>/position", methods=['GET'])
 def get_robot_position(robot_id):
