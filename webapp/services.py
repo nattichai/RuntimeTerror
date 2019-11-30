@@ -88,11 +88,15 @@ def find_nearest_robot():
         body = request.get_json()
 
         ref_position = body['ref_position']
+        k = body['k'] if 'k' in body else 1
         if tree == None:
             nearest_robot = []
         else:
-            _, idx = tree.query((ref_position['x'], ref_position['y']))
-            nearest_robot = [sorted_robot_ids[idx]]
+            _, idxes = tree.query((ref_position['x'], ref_position['y']), k=k)
+            if k == 1:
+                nearest_robot = [sorted_robot_ids[idxes]]
+            else:
+                nearest_robot = [sorted_robot_ids[idx] for idx in idxes if idx < len(sorted_robot_ids)]
         return jsonify(robot_ids=nearest_robot), HTTPStatus.OK
     except:
         return '', HTTPStatus.BAD_REQUEST
